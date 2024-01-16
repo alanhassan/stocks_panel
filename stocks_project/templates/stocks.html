@@ -3,14 +3,14 @@
 {% block head %}
 
 <head>
-  <!-- Include jQuery -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- Include DataTables -->
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.1/css/jquery.dataTables.min.css">
-  <script src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.min.js"></script>
-
-  <!-- Add custom CSS styles -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+WyQQ9BRlMm8uHv2STNRDTPT4UqA2bq7lf" crossorigin="anonymous">
+  <!-- Add DataTables CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+  
+  <title>Your Stock Table</title>
   <style>
     /* Reduce font size */
     table#next_games th,
@@ -112,75 +112,66 @@
 {% block body %}
 
 <body>
-    <h1 style="margin-top: 20px; margin-left: 60px;">Próximos Jogos</h1>
-
-    <dialog id="modal">
-      <h2 style="text-align: center;">Legenda</h2>
-      <p>Dica Segura ➜ Destacada em <b><span style= "color: white; background-color: green;">VERDE</span></b>.</p>
-      <p>Não apostar ➜ Descatacada em <b><span style="color: white; background-color: gray;">CINZA</span></b>.</p>
-      <p>OBS: Apostar nas dicas sugeridas no texto em <b><span style="color: yellow; background-color: green;">AMARELO</span></b>.</p>
-      <button class="btn btn-sn btn-outline-primary w-100 close-button">Fechar</button>
-    </dialog>
+  <h1 style="margin-top: 20px; margin-left: 60px;">Papéis</h1>
 
     <!-- Styled dropdown filter for "Papel" -->
-  <div class="filter-group">  
-    <div class="filter-container">
-      <label for="campeonatoFilter" class="filter-label">Papel:</label>
-      <select id="campeonatoFilter" class="filter-select">
-          <option value="">Todos</option>
-          {% for papel in dataframe['Papel'].unique() %}
-              <option value="{{ papel }}">{{ papel }}</option>
-          {% endfor %}
-      </select>
+    <div class="filter-group">  
+      <div class="filter-container">
+        <label for="campeonatoFilter" class="filter-label">Papel:</label>
+        <select id="campeonatoFilter" class="form-control">
+            <option value="">Todos</option>
+            {% for papel in dataframe['Papel'].unique() %}
+                <option value="{{ papel }}">{{ papel }}</option>
+            {% endfor %}
+        </select>
+      </div>
+
+      <div class="table-container">
+        <table id="next_games" class="table table-striped table-bordered table-sm">
+          <thead>
+            <tr>
+              {% for column in dataframe.columns %}
+              <th>{{ column }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for index, row in dataframe.iterrows() %}
+            {% set color = loop.cycle('#f8f9fa', '#e9ecef') %}
+            <tr style="background-color: {{ color }};">
+              {% for column, value in row.items() %}
+              <td>{{ value }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
 
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
 
-  <div class="table-container">
-    <table id="next_games">
-      <thead>
-        <tr>
-          {% for column in dataframe.columns %}
-          <th>{{ column }}</th>
-          {% endfor %}
-        </tr>
-      </thead>
-    </table>
-  </div>
+    <script>
+      $(document).ready(function() {
+        var table = $('#next_games').DataTable({
+          "paging": true,
+          "searching": true,
+          "ordering": true,
+          "orderCellsTop": true,
+          // Add more options as needed
+        });
 
+        // Apply the custom filter when the dropdown changes
+        $('#campeonatoFilter').on('change', function() {
+          var selectedPapel = $(this).val();
+          table.column(0).search(selectedPapel).draw(); // Assuming "Papel" is the third column
+        });
+      });
+    </script>
 
-  </body>
-
-  <script>
-  $(document).ready(function() {
-    var table = $('#next_games').DataTable({
-      "paging": true,
-      "searching": true,
-      // Add more options as needed
-    });
-
-    // Apply the custom filter when the dropdown changes
-    $('#campeonatoFilter').on('change', function() {
-      var selectedCampeonato = $(this).val();
-      table.column(0).search(selectedCampeonato).draw(); // Assuming "Campeonato" is the second column
-    });
-
-
-  document.getElementById('premissasButton').addEventListener('click', function () {
-        const modal = document.querySelector('#modal');
-        modal.showModal();
-    });
-
-  const modal = document.querySelector('#modal');
-  const openModal = document.querySelector('.open-button');
-  const closeModal = document.querySelector('.close-button');
-
-  openModal.addEventListener("click", () => {
-    modal.showModal();
-  });
-
-  closeModal.addEventListener("click", () => {
-    modal.close();
-  });
-  </script>
+</body>
 
 {% endblock %}
