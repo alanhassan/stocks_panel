@@ -4,11 +4,11 @@
 
 <head>
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+WyQQ9BRlMm8uHv2STNRDTPT4UqA2bq7lf" crossorigin="anonymous">
-  <!-- Add DataTables CSS -->
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Include DataTables -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.1/css/jquery.dataTables.min.css">
+  <script src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.min.js"></script>
   
   <title>Your Stock Table</title>
   <style>
@@ -112,65 +112,85 @@
 {% block body %}
 
 <body>
-  <h1 style="margin-top: 20px; margin-left: 60px;">Papéis</h1>
+  <div style="margin-top: 20px; margin-left: 60px;">
+    <h1>Papéis</h1>
 
-    <!-- Styled dropdown filter for "Papel" -->
     <div class="filter-group">  
       <div class="filter-container">
         <label for="campeonatoFilter" class="filter-label">Papel:</label>
-        <select id="campeonatoFilter" class="form-control">
+        <select id="campeonatoFilter" class="filter-select">
             <option value="">Todos</option>
             {% for papel in dataframe['Papel'].unique() %}
-                <option value="{{ papel }}">{{ papel }}</option>
+              <option value="{{ papel }}">{{ papel }}</option>
             {% endfor %}
         </select>
       </div>
-
-      <div class="table-container">
-        <table id="next_games" class="table table-striped table-bordered table-sm">
-          <thead>
-            <tr>
-              {% for column in dataframe.columns %}
-              <th>{{ column }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for index, row in dataframe.iterrows() %}
-            {% set color = loop.cycle('#f8f9fa', '#e9ecef') %}
-            <tr style="background-color: {{ color }};">
-              {% for column, value in row.items() %}
-              <td>{{ value }}</td>
-              {% endfor %}
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
     </div>
 
-    <!-- Add DataTables JS -->
-    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+    <div class="table-container">
+      <table id="next_games" class="table table-striped table-bordered table-sm">
+        <thead>
+          <tr>
+            {% for column in dataframe.columns %}
+            <th>{{ column }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for index, row in dataframe.iterrows() %}
+          {% set color = loop.cycle('#f8f9fa', '#e9ecef') %}
+          <tr style="background-color: {{ color }};">
+            {% for column, value in row.items() %}
+            <td>{{ value }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
-    <script>
-      $(document).ready(function() {
-        var table = $('#next_games').DataTable({
-          "paging": true,
-          "searching": true,
-          "ordering": true,
-          "orderCellsTop": true,
-          // Add more options as needed
-        });
+  </div>
 
-        // Apply the custom filter when the dropdown changes
-        $('#campeonatoFilter').on('change', function() {
-          var selectedPapel = $(this).val();
-          table.column(0).search(selectedPapel).draw(); // Assuming "Papel" is the third column
-        });
+  <!-- Add DataTables JS -->
+  <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+
+
+  <script>
+    $(document).ready(function() {
+      var table = $('#next_games').DataTable({
+        "paging": true,
+        "searching": true,
+        "ordering": true,
+        "orderCellsTop": true,
+        // Add more options as needed
       });
-    </script>
+
+      // Apply the custom filter when the dropdown changes
+      $('#campeonatoFilter').on('change', function() {
+        var selectedPapel = $(this).val();
+        table.column(0).search(selectedPapel).draw(); // Assuming "Papel" is the third column
+      });
+    });
+  </script>
+
+  <style>
+    .filter-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .filter-label {
+      margin-right: 10px;
+    }
+
+    .filter-dropdown {
+      flex-grow: 1;
+      max-width: 150px;
+    }
+  </style>
 
 </body>
 

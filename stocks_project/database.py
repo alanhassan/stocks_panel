@@ -4,18 +4,6 @@ import pandas as pd
 from github import Github
 import os
 
-#token
-
-key = os.environ.get('API_Key')
-g = Github(key)
-
-#repositório
-
-def get_repo():
-    repo = g.get_repo("alanhassan/stocks_panel")
-    return repo
-repo = get_repo()
-
 
 
 # updated database with recent matches from github
