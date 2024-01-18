@@ -181,7 +181,7 @@
         // Apply the custom filter when the "Data" dropdown changes
       $('#sub_setorFilter').on('change', function() {
         var selectedData = $(this).val();
-        table.column(23).search(selectedData).draw(); // Assuming "Data" is the third column
+        table.column(3).search(selectedData).draw(); // Assuming "Data" is the third column
       });
 
       // Apply the custom filter when the dropdown changes
