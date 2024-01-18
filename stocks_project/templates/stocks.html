@@ -11,6 +11,7 @@
   <script src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.min.js"></script>
   
   <title>Your Stock Table</title>
+  
   <style>
     /* Reduce font size */
     table#next_games th,
@@ -117,6 +118,16 @@
 
     <div class="filter-group">  
       <div class="filter-container">
+        <label for="sub_setorFilter" class="filter-label">Sub-setor:</label>
+        <select id="sub_setorFilter" class="filter-select">
+            <option value="">Todos</option>
+            {% for sub_setor in dataframe['sub_setor'].unique() %}
+              <option value="{{ sub_setor }}">{{ sub_setor }}</option>
+            {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-container">
         <label for="campeonatoFilter" class="filter-label">Papel:</label>
         <select id="campeonatoFilter" class="filter-select">
             <option value="">Todos</option>
@@ -125,7 +136,7 @@
             {% endfor %}
         </select>
       </div>
-    </div>
+  </div>
 
     <div class="table-container">
       <table id="next_games" class="table table-striped table-bordered table-sm">
@@ -167,6 +178,12 @@
         // Add more options as needed
       });
 
+        // Apply the custom filter when the "Data" dropdown changes
+      $('#sub_setorFilter').on('change', function() {
+        var selectedData = $(this).val();
+        table.column(23).search(selectedData).draw(); // Assuming "Data" is the third column
+      });
+
       // Apply the custom filter when the dropdown changes
       $('#campeonatoFilter').on('change', function() {
         var selectedPapel = $(this).val();
@@ -174,23 +191,6 @@
       });
     });
   </script>
-
-  <style>
-    .filter-container {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .filter-label {
-      margin-right: 10px;
-    }
-
-    .filter-dropdown {
-      flex-grow: 1;
-      max-width: 150px;
-    }
-  </style>
 
 </body>
 
