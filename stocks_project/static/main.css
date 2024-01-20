@@ -31,8 +31,53 @@ html, body {
     color: #555;
 }
 
+.filter-select,
+.filter-button {
+    font-size: 14px;
+    padding: 8px 12px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    color: #555;
+}
+
 #next_games th {
   background-color: #f2f2f2;
 }
+
+.chart-container {
+  justify-content: center; /* Center align the cards horizontally */
+  gap: 0px; /* Add 20px gap between the cards */
+  width: 90.7%;
+  height: 250px;
+}
+
+
+.container {
+  max-width: 95vw;
+}
+
+.filter-label {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.filter-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 60px;
+  margin-top: 10px
+
+}
+
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  padding: 4px 8px; /* Adjust the padding values as needed */
+  font-size: 13px; /* Adjust the font size as needed */
+}
+
+
 
 
