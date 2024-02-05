@@ -7,13 +7,27 @@
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+  <!-- Bootstrap CSS -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.min.js"></script>
+  
+
   <!-- Include DataTables -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.1/css/jquery.dataTables.min.css">
   <script src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.min.js"></script>
+
+  <!-- DataTables Select extension CSS and JS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/1.3.4/css/select.dataTables.min.css">
+  <script src="https://cdn.datatables.net/select/1.3.4/js/dataTables.select.min.js"></script>
   
   <title>Your Stock Table</title>
   
   <style>
+
+    
     /* Reduce font size */
     table#next_games th,
     table#next_games td {
@@ -34,6 +48,7 @@
       text-overflow: ellipsis;
     }
     
+    
     /* Remove unnecessary space */
     table#next_games td {
       border-collapse: collapse;
@@ -45,6 +60,7 @@
       margin: 0px 50px;
       margin-left: 65px;
       text-align: left;
+      margin-right: 10px;
     }
 
 
@@ -100,6 +116,11 @@
       margin-left: 20px; /* Adjust the margin as needed */
     }
 
+    /* Add margin to the right of the table */
+    .table-container {
+      margin-right: 30px; /* Adjust the margin as needed */
+    }
+
     /* Add more space between the filter and the table */
     #next_games_filter {
       margin-top: 40px; /* Adjust the margin as needed */
@@ -119,12 +140,13 @@
     <h1>Papéis</h1>
 
     <div class="filter-group">  
+
       <div class="filter-container">
-        <label for="sub_setorFilter" class="filter-label">Sub-setor:</label>
-        <select id="sub_setorFilter" class="filter-select">
+        <label for="setorFilter" class="filter-label">Setor:</label>
+        <select id="setorFilter" class="filter-select">
             <option value="">Todos</option>
-            {% for sub_setor in dataframe['sub_setor'].unique()|sort %}
-              <option value="{{ sub_setor }}">{{ sub_setor }}</option>
+            {% for setor in dataframe['setor'].unique()|sort %}
+              <option value="{{ setor }}">{{ setor }}</option>
             {% endfor %}
         </select>
       </div>
@@ -138,6 +160,10 @@
             {% endfor %}
         </select>
       </div>
+
+      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#filterModal">
+        Open Filters
+      </button>
   </div>
 
   <div class="table-container">
@@ -161,91 +187,353 @@
       </tbody>
     </table>
   </div>
+  
+    <!-- Filter Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="filterModalLabel">Filter Options</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <!-- Add your filter options here -->
+            <div class="filter-container">
+              <label for="plFilter" class="filter-label">P/L:</label>
+              <input type="text" id="plFilter" class="filter-input">
+            </div>
+            <div class="filter-container">
+              <label for="evEbitdaFilter" class="filter-label">EV/EBITDA:</label>
+              <input type="text" id="evEbitdaFilter" class="filter-input">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="applyFilters">Apply Filters</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
 
   </div>
 
 
   <script>
-    $(document).ready(function() {
-      var table = $('#next_games').DataTable({
+  $(document).ready(function () {
+    var table;
+    var customFilterValue;
+
+    // Initialize DataTable if it hasn't been initialized
+    if (!$.fn.DataTable.isDataTable('#next_games')) {
+      table = $('#next_games').DataTable({
         "paging": true,
         "searching": true,
+        "select": true,
         // Add more options as needed
       });
+    } else {
+      // DataTable is already initialized, just retrieve the existing instance
+      table = $('#next_games').DataTable();
+    }
   
-      // Apply the custom filter when the "Sub-setor" dropdown changes
-      $('#sub_setorFilter').on('change', function() {
+      // Apply the custom filter when the "setor" dropdown changes
+      $('#setorFilter').on('change', function() {
         var selectedData = $(this).val();
-        table.column(3).search(selectedData).draw();
-        highlightLowestValues(); // Highlight lowest values after filtering
+        if (selectedData === "") {
+          // Clear the search for the 'setor' column and redraw the table
+          table.column(2).search('').draw();
+        } else {
+          // Apply filter and color highlighting
+          table.column(2).search('^' + selectedData + '$', true, false).draw();
+          highlightValues(); // Highlight values after filtering
+        }
       });
   
       // Apply the custom filter when the "Papel" dropdown changes
       $('#campeonatoFilter').on('change', function() {
         var selectedPapel = $(this).val();
-        table.column(0).search(selectedPapel).draw();
-        highlightLowestValues(); // Highlight lowest values after filtering
+        if (selectedPapel === "") {
+          table.column(0).search('').draw();
+        } else {
+          table.column(0).search(selectedPapel).draw();
+        }
+        highlightValues(); // Highlight values after filtering
       });
   
-      function highlightLowestValues() {
-        // Reset styles before applying new highlighting
-        $('tr').find('td:eq(5)').css('background-color', ''); // Adjust 5 to the correct index of the "P/L" column
-        $('tr').find('td:eq(6)').css('background-color', ''); // Adjust 6 to the correct index of the "EV/EBITDA" column
-        $('tr').find('td:eq(7)').css('background-color', ''); // Adjust 7 to the correct index of the "P/VP" column
+      function highlightValues() {
+        // Clear all existing background colors and bold styles
+        $('tr').find('td').css({
+          'background-color': '',
+          'font-weight': ''
+        });
   
         // Get the data for the visible rows after filtering
         var visibleRowsData = table.rows({ search: 'applied' }).data();
   
         if (visibleRowsData.length > 0) {
-          // Filter out non-positive "P/L" values and find the minimum positive "P/L" value among visible rows
-          var positivePLs = visibleRowsData.toArray().map(row => parseFloat(row[5])).filter(pl => pl > 0);
+          // Highlight the 'P/L' values with a gradient from green to red
+          highlight(visibleRowsData, 4); // 4 is the index of 'P/L' column
+          highlight(visibleRowsData, 5);
+          highlight(visibleRowsData, 6);
+          highlightInverse(visibleRowsData, 7);
+          highlightInverse(visibleRowsData, 8);
+          highlightInverse(visibleRowsData, 9);
+          highlightException(visibleRowsData, 10);
+        }
+      }
   
-          if (positivePLs.length > 0) {
-            var minPL = Math.min.apply(null, positivePLs);
+      function highlight(visibleRowsData, columnIndex) {
+        var positiveValues = visibleRowsData.toArray().map(row => parseFloat(row[columnIndex])).filter(value => value > 0);
   
-            // Highlight the cells with the minimum positive "P/L" value
-            $('tr').find('td:eq(5)').each(function() { // Adjust 5 to the correct index
-              var cellValue = parseFloat($(this).text());
-              if (cellValue === minPL) {
-                $(this).css('background-color', '#54e372'); // You can adjust the color as needed
+        if (positiveValues.length > 0) {
+          // Get the minimum and maximum values for normalization
+          var minValue = Math.min.apply(null, positiveValues);
+          var maxValue = Math.max.apply(null, positiveValues);
+  
+          // Identify the cell with the highest 'P/L' value
+          var minCell = $('tr').find('td:eq(' + columnIndex + ')').filter(function() {
+            return parseFloat($(this).text()) === minValue;
+          });
+  
+          // Iterate through each cell in the 'P/L' column and set the background color based on the simplified scheme
+          $('tr').find('td:eq(' + columnIndex + ')').each(function() {
+            var cellValue = parseFloat($(this).text());
+  
+            // Check if the value is positive
+            if (cellValue > 0) {
+              // Apply the background color based on the simplified scheme
+              if (cellValue === minValue) {
+                // Lowest positive value: green
+                $(this).css('background-color', 'lime');
+              } else if (cellValue === maxValue) {
+                // Highest positive value: red
+                $(this).css('background-color', 'red');
+              } else {
+                // Other positive values: yellow
+                $(this).css('background-color', 'yellow');
               }
-            });
-          }
+            } else {
+              // For negative values, color it red
+              $(this).css('background-color', 'red');
+            }
+          });
   
-          // Filter out non-positive "EV/EBITDA" values and find the minimum positive "EV/EBITDA" value among visible rows
-          var positiveEV_EBITDA = visibleRowsData.toArray().map(row => parseFloat(row[6])).filter(ev => ev > 0);
+          // Apply bold style to the text in the cell with the highest 'P/L' value
+          minCell.css('font-weight', 'bold');
+        }
+      }
   
-          if (positiveEV_EBITDA.length > 0) {
-            var minEV_EBITDA = Math.min.apply(null, positiveEV_EBITDA);
+      function highlightInverse(visibleRowsData, columnIndex) {
+        var values = visibleRowsData.toArray().map(row => parseFloat(row[columnIndex]));
   
-            // Highlight the cells with the minimum positive "EV/EBITDA" value
-            $('tr').find('td:eq(6)').each(function() { // Adjust 6 to the correct index
-              var cellValue = parseFloat($(this).text());
-              if (cellValue === minEV_EBITDA) {
-                $(this).css('background-color', '#54e372'); // You can adjust the color as needed
+        if (values.length > 0) {
+          // Filter out NaN values and get the minimum and maximum values
+          var minValue = Math.min(...values.filter(value => !isNaN(value)));
+          var maxValue = Math.max(...values.filter(value => !isNaN(value) && value > 0));
+  
+          // Identify the cell with the most negative value
+          var maxCell = $('tr').find('td:eq(' + columnIndex + ')').filter(function() {
+            return parseFloat($(this).text()) === maxValue;
+          });
+  
+          // Flag to check if there is at least one positive value
+          var hasPositiveValues = false;
+  
+          // Iterate through each cell in the column and set the background color based on the scheme
+          $('tr').find('td:eq(' + columnIndex + ')').each(function() {
+            var cellValue = parseFloat($(this).text());
+  
+            if (isNaN(cellValue)) {
+              // Handle NaN values (if any)
+              $(this).css('background-color', 'transparent');
+            } else if (cellValue > 0) {
+              // Positive values: color it green or yellow
+              hasPositiveValues = true;
+              if (cellValue === maxValue) {
+                // Highest positive value: green
+                $(this).css('background-color', 'lime');
+              } else {
+                // Other positive values: yellow
+                $(this).css('background-color', 'yellow');
               }
-            });
-          }
+            } else {
+              // Negative values: color it red
+              $(this).css('background-color', 'red');
+            }
+          });
   
-          // Filter out non-positive "P/VP" values and find the minimum positive "P/VP" value among visible rows
-          var positiveP_VP = visibleRowsData.toArray().map(row => parseFloat(row[7])).filter(pvp => pvp > 0);
+          // Apply bold style to the text in the cell with the most negative value
+          maxCell.css('font-weight', 'bold');
   
-          if (positiveP_VP.length > 0) {
-            var minP_VP = Math.min.apply(null, positiveP_VP);
-  
-            // Highlight the cells with the minimum positive "P/VP" value
-            $('tr').find('td:eq(7)').each(function() { // Adjust 7 to the correct index
-              var cellValue = parseFloat($(this).text());
-              if (cellValue === minP_VP) {
-                $(this).css('background-color', '#54e372'); // You can adjust the color as needed
-              }
-            });
+          // If no positive values, apply bold style to the text in the cell with the most negative value
+          if (!hasPositiveValues) {
+            minCell.css('font-weight', 'bold');
           }
         }
       }
+  
+      function highlightException(visibleRowsData, columnIndex) {
+        var values = visibleRowsData.toArray().map(row => parseFloat(row[columnIndex]));
+  
+        if (values.length > 0) {
+          // Filter out NaN values and get the minimum and maximum values
+          var minValue = Math.min(...values.filter(value => !isNaN(value)));
+          var maxValue = Math.max(...values.filter(value => !isNaN(value)));
+  
+          // Identify the cell with the most negative value
+          var minCell = $('tr').find('td:eq(' + columnIndex + ')').filter(function() {
+            return parseFloat($(this).text()) === minValue;
+          });
+  
+          // Iterate through each cell in the column and set the background color based on the scheme
+          $('tr').find('td:eq(' + columnIndex + ')').each(function() {
+            var cellValue = parseFloat($(this).text());
+  
+            if (isNaN(cellValue)) {
+              // Handle NaN values (if any)
+              $(this).css('background-color', 'transparent');
+            } else if (cellValue < 0) {
+              // Negative values: color it green
+              $(this).css('background-color', 'lime');
+            } else if (cellValue === minValue) {
+              // Most negative value or lowest positive value: color it green
+              $(this).css('background-color', 'lime');
+            } else if (cellValue === maxValue) {
+              // Highest positive value: color it red
+              $(this).css('background-color', 'red');
+            } else {
+              // Other positive values: color it yellow
+              $(this).css('background-color', 'yellow');
+            }
+          });
+  
+          // Apply bold style to the text in the cell with the most negative value
+          minCell.css('font-weight', 'bold');
+        }
+      }
+  
+      // Handle reselecting 'Todos' for 'Setor'
+      $('#setorFilter').on('click', function() {
+        if ($(this).val() === "") {
+          // Clear the search for the 'setor' column and redraw the table
+          table.column(2).search('').draw();
+          // Clear all existing background colors and bold styles
+          $('tr').find('td').css({
+            'background-color': '',
+            'font-weight': ''
+          });
+        }
+      });
+
+      // Ensure the DataTable is initialized before trying to access it
+      $('#filterModal').on('hidden.bs.modal', function () {
+      // Initialize DataTable or perform related actions here
+      if (!table) {
+        table = $('#next_games').DataTable({
+          "paging": true,
+          "searching": true,
+          // Add more options as needed
+        });
+      }
     });
-  </script>  
+
+  // Function to update selection count
+  function updateSelectionCount() {
+    var selectedRows = table.rows({ selected: true }).count();
+    $('#selectionCount').text(selectedRows + ' row selected');
+  }
+
+  // Function to update selection count
+  function updateSelectionCount() {
+    var selectedRows = table.rows({ selected: true }).count();
+    $('#selectionCount').text(selectedRows + ' row selected');
+  }  
+
+// Apply the custom filter when the "P/L" or "EV/EBITDA" filter is applied
+$('#applyFilters').on('click', function () {
+  // Get filter values from the 'P/L' and 'EV/EBITDA' filter inputs
+  var plFilterValue = $('#plFilter').val();
+  var evEbitdaFilterValue = $('#evEbitdaFilter').val();
+
+  // Parse filter values to floats
+  var plCustomFilterValue = parseFloat(plFilterValue);
+  var evEbitdaCustomFilterValue = parseFloat(evEbitdaFilterValue);
+
+  // Destroy the existing DataTable instance (if it exists)
+  if ($.fn.DataTable.isDataTable('#next_games')) {
+    $('#next_games').DataTable().destroy();
+  }
+
+  // Initialize a new DataTable instance
+  table = $('#next_games').DataTable({
+    "paging": true,
+    "searching": true,
+    // Add more options as needed
+  });
+
+  // Custom search function to filter 'P/L' values lower than the input
+  $.fn.dataTable.ext.search.push(
+    function (settings, searchData, index, rowData, counter) {
+      var plValue = parseFloat(rowData[4]); // 4 is the index of 'P/L' column
+      return isNaN(plCustomFilterValue) || (plValue < plCustomFilterValue && plValue > 0);
+    }
+  );
+
+  // Custom search function to filter 'EV/EBITDA' values lower than the input
+  $.fn.dataTable.ext.search.push(
+    function (settings, searchData, index, rowData, counter) {
+      var evEbitdaValue = parseFloat(rowData[5]); // 5 is the index of 'EV/EBITDA' column
+      return isNaN(evEbitdaCustomFilterValue) || (evEbitdaValue < evEbitdaCustomFilterValue && evEbitdaValue > 0);
+    }
+  );
+
+  // Redraw the DataTable to reflect the changes
+  table.draw();
+
+  updateSelectionCount(); // Update selection count after filtering
+});
+
+
+
+
+  // Handle sorting event to reapply custom filter
+  $('#next_games thead').on('click', 'th', function () {
+    if (customFilterValue !== undefined) {
+      // Reapply the custom filter after sorting
+      $.fn.dataTable.ext.search.pop(); // Remove previous custom search function
+
+      $.fn.dataTable.ext.search.push(
+        function (settings, searchData, index, rowData, counter) {
+          var plValue = parseFloat(rowData[4]); // 4 is the index of 'P/L' column
+          return isNaN(customFilterValue) || (plValue < customFilterValue && plValue > 0);
+        }
+      );
+    }
+  });
+
+  // Ensure the DataTable is initialized before trying to access it
+  $('#filterModal').on('hidden.bs.modal', function () {
+    // Initialize DataTable or perform related actions here
+    if (!table) {
+      table = $('#next_games').DataTable({
+        "paging": true,
+        "searching": true,
+        "select": true,
+        // Add more options as needed
+      });
+    }
+  });
+});
+
+  
+  </script>
+  
+  
     
+  
 
 </body>
 

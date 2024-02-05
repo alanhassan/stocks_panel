@@ -12,8 +12,8 @@ def get_df():
     url_df = 'https://github.com/alanhassan/stocks_panel/blob/main/df.csv?raw=true'
     data = requests.get(url_df).content
     df = pd.read_csv(BytesIO(data))
-    df = df.sort_values('empresa')
-    df = df[df['sub_setor'].notnull()]
+    df = df.sort_values('Empresa')
+    df = df[df['Setor'].notnull()]
     return df
 
 df = get_df()
