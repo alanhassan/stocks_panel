@@ -145,7 +145,7 @@
         <label for="setorFilter" class="filter-label">Setor:</label>
         <select id="setorFilter" class="filter-select">
             <option value="">Todos</option>
-            {% for setor in dataframe['setor'].unique()|sort %}
+            {% for setor in dataframe['Setor'].unique()|sort %}
               <option value="{{ setor }}">{{ setor }}</option>
             {% endfor %}
         </select>
@@ -188,38 +188,77 @@
     </table>
   </div>
   
-    <!-- Filter Modal -->
-    <div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="filterModalLabel">Filter Options</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <!-- Add your filter options here -->
-            <div class="filter-container">
-              <label for="plFilter" class="filter-label">P/L:</label>
-              <input type="text" id="plFilter" class="filter-input">
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-labelledby="filterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="filterModalLabel">Filter Options</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-6">
+              <!-- First column -->
+              <div class="form-group">
+                <label for="plFilter" class="filter-label">P/L (<strong>menor</strong> que):</label>
+                <input type="text" id="plFilter" class="form-control filter-input">
+              </div>
+              <div class="form-group">
+                <label for="evEbitdaFilter" class="filter-label">EV/EBITDA (<strong>menor</strong> que):</label>
+                <input type="text" id="evEbitdaFilter" class="form-control filter-input">
+              </div>
+              <div class="form-group">
+                <label for="pvpFilter" class="filter-label">P/VP (<strong>menor</strong> que):</label>
+                <input type="text" id="pvpFilter" class="form-control filter-input">
+              </div>
+              <div class="form-group">
+                <label for="roeFilter" class="filter-label">ROE (<strong>maior</strong> que):</label>
+                <input type="text" id="roeFilter" class="form-control filter-input">
+              </div>
+              <!-- Add more filters to the first column as needed -->
             </div>
-            <div class="filter-container">
-              <label for="evEbitdaFilter" class="filter-label">EV/EBITDA:</label>
-              <input type="text" id="evEbitdaFilter" class="filter-input">
+            <div class="col-md-6">
+              <!-- Second column -->
+              <div class="form-group">
+                <label for="divyieldFilter" class="filter-label">Div. Yield (<strong>maior</strong> que):</label>
+                <input type="text" id="divyieldFilter" class="form-control filter-input">
+              </div>
+              <div class="form-group">
+                <label for="crescrecFilter" class="filter-label">Cresc. Rec.5a (<strong>maior</strong> que):</label>
+                <input type="text" id="crescrecFilter" class="form-control filter-input">
+              </div>
+              <div class="form-group">
+                <label for="divbrutpatrimFilter" class="filter-label">Dív.Brut/ Patrim. (<strong>menor</strong> que):</label>
+                <input type="text" id="divbrutpatrimFilter" class="form-control filter-input">
+              </div>
+              <div class="form-group">
+                <label for="patrimliqFilter" class="filter-label">Patrim. Líq (x10⁶)(<strong>maior</strong> que):</label>
+                <input type="text" id="patrimliqFilter" class="form-control filter-input">
+              </div>
+              <!-- Add more filters to the second column as needed -->
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="applyFilters">Apply Filters</button>
           </div>
         </div>
+        <!-- Add more filter options as needed -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="applyFilters">Apply Filters</button>
       </div>
     </div>
-  
+  </div>
+</div>
+
+
+
 
   </div>
 
+  
 
   <script>
   $(document).ready(function () {
@@ -282,6 +321,7 @@
           highlightInverse(visibleRowsData, 8);
           highlightInverse(visibleRowsData, 9);
           highlightException(visibleRowsData, 10);
+          highlightPositiveNegative(visibleRowsData, 11);
         }
       }
   
@@ -374,6 +414,28 @@
           }
         }
       }
+
+      function highlightPositiveNegative(visibleRowsData, columnIndex) {
+
+        // Get the data for the visible rows after filtering
+        var visibleRowsData = table.rows({ search: 'applied' }).data();
+
+        // Iterate through each cell in the specified column and set the background color based on the value
+        $('tr').find('td:eq(' + columnIndex + ')').each(function () {
+          var cellValue = parseFloat($(this).text());
+
+          if (!isNaN(cellValue)) {
+            // Check if the value is positive or negative and apply the corresponding background color
+            if (cellValue >= 0) {
+              // Positive values: color it green
+              $(this).css('background-color', 'lime');
+            } else {
+              // Negative values: color it red
+              $(this).css('background-color', 'red');
+            }
+          }
+        });
+      }
   
       function highlightException(visibleRowsData, columnIndex) {
         var values = visibleRowsData.toArray().map(row => parseFloat(row[columnIndex]));
@@ -457,10 +519,22 @@ $('#applyFilters').on('click', function () {
   // Get filter values from the 'P/L' and 'EV/EBITDA' filter inputs
   var plFilterValue = $('#plFilter').val();
   var evEbitdaFilterValue = $('#evEbitdaFilter').val();
+  var pvpFilterValue = $('#pvpFilter').val();
+  var roeFilterValue = $('#roeFilter').val();
+  var divyieldFilterValue = $('#divyieldFilter').val();
+  var crescrecFilterValue = $('#crescrecFilter').val();
+  var divbrutpatrimFilterValue = $('#divbrutpatrimFilter').val();
+  var patrimliqFilterValue = $('#patrimliqFilter').val()
 
   // Parse filter values to floats
   var plCustomFilterValue = parseFloat(plFilterValue);
   var evEbitdaCustomFilterValue = parseFloat(evEbitdaFilterValue);
+  var pvpCustomFilterValue = parseFloat(pvpFilterValue);
+  var roeCustomFilterValue = parseFloat(roeFilterValue);
+  var divyieldCustomFilterValue = parseFloat(divyieldFilterValue);
+  var crescrecCustomFilterValue = parseFloat(crescrecFilterValue);
+  var divbrutpatrimCustomFilterValue= parseFloat(divbrutpatrimFilterValue);
+  var patrimliqCustomFilterValue = parseFloat(patrimliqFilterValue);
 
   // Destroy the existing DataTable instance (if it exists)
   if ($.fn.DataTable.isDataTable('#next_games')) {
@@ -474,11 +548,16 @@ $('#applyFilters').on('click', function () {
     // Add more options as needed
   });
 
+  // Remove existing custom search functions
+  while ($.fn.dataTable.ext.search.length > 0) {
+    $.fn.dataTable.ext.search.pop();
+  }
+
   // Custom search function to filter 'P/L' values lower than the input
   $.fn.dataTable.ext.search.push(
     function (settings, searchData, index, rowData, counter) {
       var plValue = parseFloat(rowData[4]); // 4 is the index of 'P/L' column
-      return isNaN(plCustomFilterValue) || (plValue < plCustomFilterValue && plValue > 0);
+      return isNaN(plCustomFilterValue) || (plValue <= plCustomFilterValue && plValue > 0);
     }
   );
 
@@ -486,10 +565,60 @@ $('#applyFilters').on('click', function () {
   $.fn.dataTable.ext.search.push(
     function (settings, searchData, index, rowData, counter) {
       var evEbitdaValue = parseFloat(rowData[5]); // 5 is the index of 'EV/EBITDA' column
-      return isNaN(evEbitdaCustomFilterValue) || (evEbitdaValue < evEbitdaCustomFilterValue && evEbitdaValue > 0);
+      return isNaN(evEbitdaCustomFilterValue) || (evEbitdaValue <= evEbitdaCustomFilterValue && evEbitdaValue > 0);
     }
   );
 
+  // Custom search function to filter 'P/VP' values lower than the input
+  $.fn.dataTable.ext.search.push(
+    function (settings, searchData, index, rowData, counter) {
+      var pvpValue = parseFloat(rowData[6]); // 5 is the index of 'EV/EBITDA' column
+      return isNaN(pvpCustomFilterValue) || (pvpValue <= pvpCustomFilterValue && pvpValue > 0);
+    }
+  );
+
+
+  // Custom search function to filter 'ROE' values lower than the input
+  $.fn.dataTable.ext.search.push(
+    function (settings, searchData, index, rowData, counter) {
+      var roeValue = parseFloat(rowData[7]); // 5 is the index of 'EV/EBITDA' column
+      return isNaN(roeCustomFilterValue) || (roeValue >= roeCustomFilterValue && roeValue > 0);
+    }
+  );
+
+  // Custom search function to filter 'Div. Yield' values lower than the input
+  $.fn.dataTable.ext.search.push(
+    function (settings, searchData, index, rowData, counter) {
+      var divyieldValue = parseFloat(rowData[8]); // 5 is the index of 'EV/EBITDA' column
+      return isNaN(divyieldCustomFilterValue) || (divyieldValue >= divyieldCustomFilterValue && divyieldValue > 0);
+    }
+  );
+
+  // Custom search function to filter 'Cresc. Rec.5a' values lower than the input
+  $.fn.dataTable.ext.search.push(
+    function (settings, searchData, index, rowData, counter) {
+      var crescrecValue = parseFloat(rowData[9]); // 5 is the index of 'EV/EBITDA' column
+      return isNaN(crescrecCustomFilterValue) || (crescrecValue >= crescrecCustomFilterValue && crescrecValue > 0);
+    }
+  );
+
+  // Custom search function to filter 'DivbrutpatrimC' values lower than the input
+  $.fn.dataTable.ext.search.push(
+    function (settings, searchData, index, rowData, counter) {
+      var divbrutpatrimValue = parseFloat(rowData[10]); // 5 is the index of 'EV/EBITDA' column
+      return isNaN(divbrutpatrimCustomFilterValue) || (divbrutpatrimValue <= divbrutpatrimCustomFilterValue || divbrutpatrimValue < 0);
+    }
+  );
+
+  // Custom search function to filter 'patrim Liq' values lower than the input
+  $.fn.dataTable.ext.search.push(
+    function (settings, searchData, index, rowData, counter) {
+      var patrimliqValue = parseFloat(rowData[11]); // 5 is the index of 'EV/EBITDA' column
+      return isNaN(patrimliqCustomFilterValue) || (patrimliqValue >= patrimliqCustomFilterValue && patrimliqValue > 0);
+    }
+  );
+
+  
   // Redraw the DataTable to reflect the changes
   table.draw();
 

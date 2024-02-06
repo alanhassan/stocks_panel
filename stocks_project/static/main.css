@@ -78,6 +78,9 @@ html, body {
   font-size: 13px; /* Adjust the font size as needed */
 }
 
+.navbar-nav {
+  margin-left: auto; /* Pushes the nav items to the right */
+}
 
 
 
